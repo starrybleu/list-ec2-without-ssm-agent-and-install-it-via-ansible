@@ -12,12 +12,18 @@ module SsmAgent
 
       def list_instance_ids_states(ec2_resource)
         response = ec2_resource.instances
-        if response.count.zero?
-          puts 'No instances found.'
-        else
-          puts 'Instances -- ID, state:'
-          response.each_with_index do |instance, idx|
-            puts "#{idx}, #{instance.id}, #{instance.state.name}"
+        return puts 'No instances found.' if response.count.zero?
+
+        puts 'Instances -- ID, state:'
+        # puts "#{response.first.data}"
+
+        response.map(&:data)
+                .group_by { |i| i[:key_name] }
+                .each do |ssh_key_name, instances|
+          puts "[[[[ ssh_key_name : #{ssh_key_name} ]]]]"
+          instances.filter { |i| i.state.name == 'running' }
+            .each do |instance_data|
+            puts "#{ssh_key_name}, #{instance_data.instance_id}, #{instance_data.private_ip_address},  #{instance_data.state}, #{instance_data.platform}, #{instance_data.architecture}"
           end
         end
       rescue StandardError => e
