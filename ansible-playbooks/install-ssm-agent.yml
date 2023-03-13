@@ -9,17 +9,17 @@
     - name: installing ssm-agent using rpm (arm64)
       yum: name=https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_arm64/amazon-ssm-agent.rpm
       when: ansible_architecture == "arm64"
+    - name: check systemctl is available
+      shell: systemctl --version
+      register: systemctl_output
     - name: starting ssm-agent via systemctl
       ansible.builtin.systemd:
         name: amazon-ssm-agent
         state: started
         enabled: true
-    - name: Populate service facts
-      service_facts:
+        when: systemctl_output is regex('systemd')
     - name: starting ssm-agent via service
       service:
         name: amazon-ssm-agent
         state: started
-        use: service
-        when: "'amazon-ssm-agent' in services"
-
+        when: systemctl_output is not regex('systemd')
