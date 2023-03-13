@@ -1,0 +1,25 @@
+---
+- name: installing ssm-agent
+  hosts: all
+  become: true
+  tasks:
+    - name: installing ssm-agent using rpm (amd64)
+      yum: name=https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+      when: ansible_architecture == "x86_64"
+    - name: installing ssm-agent using rpm (arm64)
+      yum: name=https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_arm64/amazon-ssm-agent.rpm
+      when: ansible_architecture == "arm64"
+    - name: starting ssm-agent via systemctl
+      ansible.builtin.systemd:
+        name: amazon-ssm-agent
+        state: started
+        enabled: true
+    - name: Populate service facts
+      service_facts:
+    - name: starting ssm-agent via service
+      service:
+        name: amazon-ssm-agent
+        state: started
+        use: service
+        when: "'amazon-ssm-agent' in services"
+
